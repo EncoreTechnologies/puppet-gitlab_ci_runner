@@ -9,6 +9,7 @@ Puppet::Functions.create_function(:'gitlab_ci_runner::unregister_from_file') do
   # @param runner_name The name of the runner. Use as identifier for the retrived auth token.
   # @param proxy HTTP proxy to use when unregistering
   # @param ca_file An absolute path to a trusted certificate authority file.
+  # @param ssl_insecure Whether or not to make insecure requests
   # @example Using it as a Deferred function with a file resource
   #   file { '/etc/gitlab-runner/auth-token-testrunner':
   #     file    => absent,
@@ -21,9 +22,10 @@ Puppet::Functions.create_function(:'gitlab_ci_runner::unregister_from_file') do
     param 'String[1]', :runner_name
     optional_param 'Optional[String[1]]', :proxy
     optional_param 'Optional[String[1]]', :ca_file # This function will be deferred so can't use types from stdlib etc.
+    optional_param 'Optional[Boolean]', :ssl_insecure
   end
 
-  def unregister_from_file(url, runner_name, proxy = nil, ca_file = nil)
+  def unregister_from_file(url, runner_name, proxy = nil, ca_file = nil, ssl_insecure=false)
     filename = "/etc/gitlab-runner/auth-token-#{runner_name}"
     return "#{filename} file doesn't exist" unless File.exist?(filename)
 
@@ -38,7 +40,7 @@ Puppet::Functions.create_function(:'gitlab_ci_runner::unregister_from_file') do
           Puppet.warning('Unable to unregister gitlab runner at this time as the specified `ca_file` does not exist. The runner config will be removed from this hosts config only; please remove from gitlab manually.')
           return 'Specified CA file doesn\'t exist, not attempting to create authtoken'
         end
-        PuppetX::Gitlab::Runner.unregister(url, { 'token' => authtoken }, proxy, ca_file)
+        PuppetX::Gitlab::Runner.unregister(url, { 'token' => authtoken }, proxy, ca_file, ssl_insecure)
         message = "Successfully unregistered gitlab runner #{runner_name}"
         Puppet.debug message
         message

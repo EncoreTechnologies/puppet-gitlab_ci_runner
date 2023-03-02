@@ -8,21 +8,21 @@ require 'puppet'
 module PuppetX
   module Gitlab
     module APIClient
-      def self.delete(url, options, proxy, ca_file)
-        response = request(url, Net::HTTP::Delete, options, proxy, ca_file)
+      def self.delete(url, options, proxy, ca_file, ssl_insecure)
+        response = request(url, Net::HTTP::Delete, options, proxy, ca_file, ssl_insecure)
         validate(response)
 
         {}
       end
 
-      def self.post(url, options, proxy, ca_file)
-        response = request(url, Net::HTTP::Post, options, proxy, ca_file)
+      def self.post(url, options, proxy, ca_file, ssl_insecure)
+        response = request(url, Net::HTTP::Post, options, proxy, ca_file, ssl_insecure)
         validate(response)
 
         JSON.parse(response.body)
       end
 
-      def self.request(url, http_method, options, proxy, ca_file)
+      def self.request(url, http_method, options, proxy, ca_file, ssl_insecure)
         uri     = URI.parse(url)
         headers = {
           'Accept' => 'application/json',
@@ -39,11 +39,14 @@ module PuppetX
 
         http = Net::HTTP.new(uri.host, uri.port, proxy_host, proxy_port)
         if uri.scheme == 'https'
+          if ssl_insecure:
+            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          else
+            http.verify_mode = OpenSSL::SSL::VERIFY_PEER
           http.use_ssl     = true
-          http.verify_mode = OpenSSL::SSL::VERIFY_PEER
           http.ca_file = ca_file if ca_file
         end
-        request          = http_method.new(uri.request_uri, headers)
+        request          = http_method.new(uri.request_uri, initheader=headers)
         request.body     = options.to_json
 
         begin
@@ -64,16 +67,16 @@ module PuppetX
     end
 
     module Runner
-      def self.register(host, options, proxy = nil, ca_file = nil)
+      def self.register(host, options, proxy = nil, ca_file = nil, ssl_insecure = false)
         url = "#{host}/api/v4/runners"
         Puppet.info "Registering gitlab runner with #{host}"
-        PuppetX::Gitlab::APIClient.post(url, options, proxy, ca_file)
+        PuppetX::Gitlab::APIClient.post(url, options, proxy, ca_file, ssl_insecure)
       end
 
-      def self.unregister(host, options, proxy = nil, ca_file = nil)
+      def self.unregister(host, options, proxy = nil, ca_file = nil, ssl_insecure = false)
         url = "#{host}/api/v4/runners"
         Puppet.info "Unregistering gitlab runner with #{host}"
-        PuppetX::Gitlab::APIClient.delete(url, options, proxy, ca_file)
+        PuppetX::Gitlab::APIClient.delete(url, options, proxy, ca_file, ssl_insecure)
       end
     end
   end
