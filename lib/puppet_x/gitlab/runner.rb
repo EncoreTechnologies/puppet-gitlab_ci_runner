@@ -43,6 +43,7 @@ module PuppetX
             http.verify_mode = OpenSSL::SSL::VERIFY_NONE
           else
             http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+          end
           http.use_ssl     = true
           http.ca_file = ca_file if ca_file
         end
