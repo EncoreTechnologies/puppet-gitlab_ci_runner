@@ -39,7 +39,7 @@ module PuppetX
 
         http = Net::HTTP.new(uri.host, uri.port, proxy_host, proxy_port)
         if uri.scheme == 'https'
-          if ssl_insecure:
+          if ssl_insecure
             http.verify_mode = OpenSSL::SSL::VERIFY_NONE
           else
             http.verify_mode = OpenSSL::SSL::VERIFY_PEER
