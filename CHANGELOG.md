@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 Each new release typically also includes the latest modulesync defaults.
 These should not affect the functionality of the module.
 
+## [v4.4.2]
+**Implemented enchancements:**
+
+- Add parameter, 'ssl_insecure' that manages whether or not to make insecure ssl requests
+
 ## [v4.4.0](https://github.com/voxpupuli/puppet-gitlab_ci_runner/tree/v4.4.0) (2022-12-14)
 
 [Full Changelog](https://github.com/voxpupuli/puppet-gitlab_ci_runner/compare/v4.3.1...v4.4.0)
