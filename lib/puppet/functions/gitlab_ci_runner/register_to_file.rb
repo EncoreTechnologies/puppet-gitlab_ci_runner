@@ -12,6 +12,7 @@ Puppet::Functions.create_function(:'gitlab_ci_runner::register_to_file') do
   # @param additional_options A hash with all additional configuration options for that runner
   # @param proxy The HTTP proxy to use when registering
   # @param ca_file An absolute path to a trusted certificate authority file.
+  # @param ssl_insecure Whether or not to send insecure requests
   # @return [String] Returns the authentication token
   # @example Using it as a Deferred function
   #   gitlab_ci_runner::runner { 'testrunner':
@@ -30,10 +31,11 @@ Puppet::Functions.create_function(:'gitlab_ci_runner::register_to_file') do
     optional_param 'Hash', :additional_options
     optional_param 'Optional[String[1]]', :proxy
     optional_param 'Optional[String[1]]', :ca_file # This function will be deferred so can't use types from Stdlib etc.
+    optional_param 'Optional[Boolean]', :ssl_insecure
     return_type 'String[1]'
   end
 
-  def register_to_file(url, regtoken, runner_name, additional_options = {}, proxy = nil, ca_file = nil)
+  def register_to_file(url, regtoken, runner_name, additional_options = {}, proxy = nil, ca_file = nil, ssl_insecure=false)
     filename = "/etc/gitlab-runner/auth-token-#{runner_name}"
     if File.exist?(filename)
       authtoken = File.read(filename).strip
@@ -46,7 +48,7 @@ Puppet::Functions.create_function(:'gitlab_ci_runner::register_to_file') do
           Puppet.warning('Unable to register gitlab runner at this time as the specified `ca_file` does not exist (yet).  If puppet is managing this file, the next run should complete the registration process.')
           return 'Specified CA file doesn\'t exist, not attempting to create authtoken'
         end
-        authtoken = PuppetX::Gitlab::Runner.register(url, additional_options.merge('token' => regtoken), proxy, ca_file)['token']
+        authtoken = PuppetX::Gitlab::Runner.register(url, additional_options.merge('token' => regtoken), proxy, ca_file, ssl_insecure)['token']
 
         # If this function is used as a Deferred function the Gitlab Runner config dir
         # will not exist on the first run, because the package isn't installed yet.

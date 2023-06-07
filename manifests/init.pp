@@ -57,6 +57,8 @@
 #   Manage the parent directory of the config file.
 # @param config_dir_mode
 #   The file permissions applied to the config directory.
+# @param ssl_insecure
+#   Whether or not to make insecure requests
 # @param http_proxy
 #   An HTTP proxy to use whilst registering runners.
 #   This setting is only used when registering or unregistering runners and will be used for all runners in the `runners` parameter.
@@ -97,6 +99,7 @@ class gitlab_ci_runner (
   Stdlib::Filemode                           $config_mode     = '0444',
   Boolean                                    $manage_config_dir = false,
   Optional[Stdlib::Filemode]                 $config_dir_mode = undef,
+  Boolean                                    $ssl_insecure    = false,
   Optional[Stdlib::HTTPUrl]                  $http_proxy      = undef,
   Optional[Stdlib::Unixpath]                 $ca_file         = undef,
 ) {
@@ -142,12 +145,13 @@ class gitlab_ci_runner (
     }
 
     gitlab_ci_runner::runner { $title:
-      ensure     => $_config['ensure'],
-      config     => $_config - ['ensure', 'name', 'ca_file'],
-      http_proxy => $http_proxy,
-      ca_file    => $_ca_file,
-      require    => Class['gitlab_ci_runner::config'],
-      notify     => Class['gitlab_ci_runner::service'],
+      ensure       => $_config['ensure'],
+      config       => $_config - ['ensure', 'name', 'ca_file'],
+      http_proxy   => $http_proxy,
+      ca_file      => $_ca_file,
+      ssl_insecure => $ssl_insecure,
+      require      => Class['gitlab_ci_runner::config'],
+      notify       => Class['gitlab_ci_runner::service'],
     }
   }
 }
